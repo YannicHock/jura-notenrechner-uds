@@ -1,0 +1,45 @@
+name: Deploy static content to Pages
+
+on:
+  # Führt den Workflow aus, wenn Änderungen auf den main-Branch gepusht werden
+  push:
+    branches: ["main"]
+  # Erlaubt das manuelle Ausführen des Workflows über den "Actions"-Tab
+  workflow_dispatch:
+
+# Setzt die nötigen Berechtigungen des GITHUB_TOKEN für das Deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Stellt sicher, dass immer nur ein Deployment gleichzeitig läuft
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Einzelner Job für das Deployment
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Lädt das gesamte Repository hoch. 
+          # Wenn deine HTML-Datei in einem Unterordner liegt (z.B. 'public' oder 'dist'), 
+          # ändere den Pfad entsprechend (z.B. path: './public')
+          path: '.'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
