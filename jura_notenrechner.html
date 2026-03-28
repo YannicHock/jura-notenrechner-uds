@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jura Notenrechner</title>
+  <style>
+    :root {
+      /* Modern Color Palette */
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-label: #475569;
+      --border-light: #e2e8f0;
+      --border-input: #cbd5e1;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #ef4444;
+      
+      /* Spacing & Radii (Compact for 100vh) */
+      --radius-card: 12px;
+      --radius-input: 6px;
+      --pad-card: 20px;
+      --gap-grid: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.4;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Lock layout to 100vh on Desktop */
+    @media (min-width: 1024px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+
+    .wrapper {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Typography */
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; color: #1e293b; }
+    h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: #1e293b; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
+    h3 { font-size: 0.85rem; font-weight: 600; margin: 12px 0 8px; color: var(--text-label); text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; max-width: 800px; }
+    .small-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4; }
+    
+    /* Fixed min-heights prevent layout shift when text appears */
+    .hint-text { font-size: 0.8rem; color: var(--text-muted); min-height: 18px; margin-top: 12px; }
+    .warn-text { font-size: 0.8rem; color: var(--danger); font-weight: 500; min-height: 18px; }
+
+    /* Layout: 2x2 Grid */
+    .grid-layout { display: grid; gap: var(--gap-grid); }
+    
+    @media (min-width: 1024px) {
+      .grid-layout {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "pf sp"
+          "res wish";
+        align-items: stretch;
+      }
+      .card-pf { grid-area: pf; }
+      .card-sp { grid-area: sp; }
+      .card-res { grid-area: res; }
+      .card-wish { grid-area: wish; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-card);
+      padding: var(--pad-card);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Form Fields */
+    .field-group { display: grid; gap: 4px; }
+    .field-group label { font-size: 0.8rem; font-weight: 500; color: var(--text-label); }
+    
+    input[type="number"] {
+      width: 100%;
+      padding: 6px 10px;
+      background-color: var(--bg-body);
+      border: 1px solid var(--border-input);
+      border-radius: var(--radius-input);
+      font-size: 0.9rem;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background-color: #fff;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+    input[type="number"]::placeholder { color: #94a3b8; }
+
+    /* Inner Grids for Inputs */
+    .input-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .input-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    
+    @media (max-width: 640px) { .input-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 480px) { .input-grid-3, .input-grid-2 { grid-template-columns: 1fr; } }
+
+    /* Results Dashboard Style */
+    .result-list { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border-light);
+      font-size: 0.85rem;
+      color: var(--text-label);
+    }
+    .result-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .result-val { font-weight: 600; color: var(--text-main); font-variant-numeric: tabular-nums; }
+    
+    .result-row.highlight {
+      border-bottom: none;
+      background: var(--bg-body);
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+    .result-row.highlight .result-label { font-weight: 600; color: var(--text-main); }
+    .result-row.highlight .result-val { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+
+    .result-row.grand-total {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 12px 16px;
+    }
+    .result-row.grand-total .result-label { font-size: 0.95rem; }
+    .result-row.grand-total .result-val { font-size: 1.3rem; color: #1d4ed8; }
+
+    /* Buttons */
+    .actions { display: flex; gap: 10px; margin-top: auto; padding-top: 16px; }
+    button {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: var(--radius-input);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-input);
+      color: var(--text-label);
+    }
+    .btn-outline:hover { background: var(--border-light); color: var(--text-main); }
+    
+    .btn-primary {
+      background: #f8fafc;
+      border: 1px solid var(--border-input);
+      color: var(--text-main);
+    }
+    .btn-primary:hover { border-color: #94a3b8; background: #e2e8f0; }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <h1>Jura Notenrechner</h1>
+    <p class="subtitle">
+      Berechnet die Gesamtnote aus der staatlichen Pflichtfachprüfung (70%) und der universitären Schwerpunktprüfung (30%).
+    </p>
+
+    <div class="grid-layout">
+      <!-- 1. Pflichtfach -->
+      <div class="card card-pf">
+        <h2>1. Staatliche Pflichtfachprüfung</h2>
+        
+        <h3>Sechs Aufsichtsarbeiten</h3>
+        <div class="input-grid-3" id="pf-klausuren"></div>
+
+        <h3>Mündliche Prüfung</h3>
+        <div class="input-grid-3" id="pf-muendlich-parts"></div>
+
+        <p class="small-text" style="margin-top: auto;">
+          Gewichtung: Klausuren 12/17 (~71%), Mündlich 5/17 (~29%).
+        </p>
+      </div>
+
+      <!-- 2. Schwerpunkt -->
+      <div class="card card-sp">
+        <h2>2. Universitäre Schwerpunktprüfung</h2>
+
+        <h3>Zwei Klausuren</h3>
+        <div class="input-grid-2" id="sp-klausuren"></div>
+
+        <h3 style="margin-top: 16px;">Mündliche Prüfung</h3>
+        <div class="field-group">
+          <label for="sp-muendlich" style="display:none;">Endnote Mündlich</label>
+          <input id="sp-muendlich" type="number" step="0.1" min="0" max="18" placeholder="Endnote (z.B. 10.0)" />
+        </div>
+
+        <p class="small-text" style="margin-top: auto;">
+          Gewichtung: Klausuren 12/17 (~71%), Mündlich 5/17 (~29%).
+        </p>
+      </div>
+
+      <!-- 3. Gesamtergebnis -->
+      <div class="card card-res">
+        <h2>Gesamtergebnis</h2>
+        
+        <div class="result-list">
+          <div class="result-row">
+            <span class="result-label">Ø Pflichtfach Klausuren</span>
+            <span class="result-val" id="out-pf-avg">–</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">Ø Pflichtfach Mündlich</span>
+            <span class="result-val" id="out-pf-oral-avg">–</span>
+          </div>
+          <div class="result-row highlight">
+            <span class="result-label">Pflichtfachnote (70%)</span>
+            <span class="result-val" id="out-pf">–</span>
+          </div>
+
+          <div class="result-row" style="margin-top: 4px;">
+            <span class="result-label">Ø Schwerpunkt Klausuren</span>
+            <span class="result-val" id="out-sp-avg">–</span>
+          </div>
+          <div class="result-row highlight">
+            <span class="result-label">Schwerpunktnote (30%)</span>
+            <span class="result-val" id="out-sp">–</span>
+          </div>
+
+          <div class="result-row highlight grand-total" style="margin-top: 8px;">
+            <span class="result-label">Gesamtnote</span>
+            <span class="result-val" id="out-total">–</span>
+          </div>
+        </div>
+
+        <div class="hint-text" id="out-hint"></div>
+        <div class="warn-text" id="out-warn"></div>
+
+        <div class="actions">
+          <button id="btn-reset" class="btn-outline" type="button">Zurücksetzen</button>
+        </div>
+      </div>
+
+      <!-- 4. Wunschnote -->
+      <div class="card card-wish">
+        <h2>Ziel-Rechner: Benötigter Schwerpunkt</h2>
+        <p class="small-text" style="margin-top: -6px; margin-bottom: 16px;">
+          Berechne, welche Noten im Schwerpunkt nötig sind, um eine bestimmte Gesamtnote zu erreichen. 
+          <em>(Voraussetzung: Pflichtfach komplett)</em>
+        </p>
+
+        <div class="input-grid-2">
+          <div class="field-group">
+            <label for="target-total">Wunschnote (Gesamt)</label>
+            <input id="target-total" type="number" step="0.1" min="0" max="18" placeholder="z.B. 9.0" />
+          </div>
+          <div class="field-group">
+            <label for="assume-sp-oral">Schwerpunkt Mündlich <span style="font-weight:normal;color:#94a3b8;">(Optional)</span></label>
+            <input id="assume-sp-oral" type="number" step="0.1" min="0" max="18" placeholder="z.B. 10.0" />
+          </div>
+        </div>
+
+        <div class="result-list" style="margin-top: 16px; flex-grow: 0;">
+          <div class="result-row highlight" style="margin:0;">
+            <span class="result-label">Benötigte Schwerpunkt-Endnote</span>
+            <span class="result-val" id="out-need-sp-note">–</span>
+          </div>
+        </div>
+        
+        <div class="hint-text" id="out-need-sp-detail" style="margin-top: 12px; line-height: 1.4;">–</div>
+        <div class="warn-text" id="out-need-sp-warn"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const W_EXAMS_PFLICHT = 0.7;
+    const W_EXAMS_SCHWERPUNKT = 0.3;
+    const W_KLAUSUREN = 12/17;
+    const W_MUENDLICH = 5/17;
+
+    const pfKlausurenWrap = document.getElementById('pf-klausuren');
+    const pfOralWrap = document.getElementById('pf-muendlich-parts');
+    const spKlausurenWrap = document.getElementById('sp-klausuren');
+
+    const spMuendlich = document.getElementById('sp-muendlich');
+    const targetTotal = document.getElementById('target-total');
+    const assumeSpOral = document.getElementById('assume-sp-oral');
+
+    const outPfAvg = document.getElementById('out-pf-avg');
+    const outPfOralAvg = document.getElementById('out-pf-oral-avg');
+    const outPf = document.getElementById('out-pf');
+    const outSpAvg = document.getElementById('out-sp-avg');
+    const outSp = document.getElementById('out-sp');
+    const outTotal = document.getElementById('out-total');
+
+    const outHint = document.getElementById('out-hint');
+    const outWarn = document.getElementById('out-warn');
+    const outNeedSpNote = document.getElementById('out-need-sp-note');
+    const outNeedSpDetail = document.getElementById('out-need-sp-detail');
+    const outNeedSpWarn = document.getElementById('out-need-sp-warn');
+
+    const btnReset = document.getElementById('btn-reset');
+    const btnFillDemo = document.getElementById('btn-fill-demo');
+
+    const pfKlausurInputs = [];
+    const pfOralInputs = [];
+    const spKlausurInputs = [];
+
+    function makeField(container, id, labelText, placeholder) {
+      const field = document.createElement('div');
+      field.className = 'field-group';
+
+      const label = document.createElement('label');
+      label.htmlFor = id;
+      label.textContent = labelText;
+
+      const input = document.createElement('input');
+      input.id = id;
+      input.type = 'number';
+      input.step = '0.1';
+      input.min = '0';
+      input.max = '18';
+      input.placeholder = placeholder;
+      input.addEventListener('input', recalc);
+
+      field.appendChild(label);
+      field.appendChild(input);
+      container.appendChild(field);
+      return input;
+    }
+
+    for (let i = 1; i <= 6; i++) pfKlausurInputs.push(makeField(pfKlausurenWrap, `pf-k${i}`, `Klausur ${i}`, 'z.B. 8.0'));
+    for (let i = 1; i <= 3; i++) pfOralInputs.push(makeField(pfOralWrap, `pf-o${i}`, `Teilnote ${i}`, 'z.B. 9.0'));
+    for (let i = 1; i <= 2; i++) spKlausurInputs.push(makeField(spKlausurenWrap, `sp-k${i}`, `Klausur ${i}`, 'z.B. 10.0'));
+
+    spMuendlich.addEventListener('input', recalc);
+    targetTotal.addEventListener('input', recalc);
+    assumeSpOral.addEventListener('input', recalc);
+
+    function parseGrade(value) {
+      if (value === '' || value == null) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function avgOf(inputs) {
+      const nums = inputs.map(i => parseGrade(i.value)).filter(n => n !== null);
+      if (nums.length === 0) return { avg: null, count: 0 };
+      const sum = nums.reduce((a, b) => a + b, 0);
+      return { avg: sum / nums.length, count: nums.length };
+    }
+
+    function round2(n) { return Math.round(n * 100) / 100; }
+    function fmt(n) { return n === null ? '–' : round2(n).toFixed(2); }
+
+    function weightedExamNote(klausurAvg, oralAvgOrGrade) {
+      if (klausurAvg === null || oralAvgOrGrade === null) return null;
+      return (W_KLAUSUREN * klausurAvg) + (W_MUENDLICH * oralAvgOrGrade);
+    }
+
+    function recalc() {
+      outWarn.textContent = '';
+      outHint.textContent = '';
+      outNeedSpWarn.textContent = '';
+      outNeedSpDetail.textContent = 'Trage optional deine mündliche Schwerpunktnote ein, um den benötigten Klausurenschnitt zu sehen.';
+
+      const pfK = avgOf(pfKlausurInputs);
+      const pfO = avgOf(pfOralInputs);
+      const pfNote = weightedExamNote(pfK.avg, pfO.avg);
+
+      outPfAvg.textContent = pfK.avg === null ? '–' : `${fmt(pfK.avg)} (${pfK.count}/6)`;
+      outPfOralAvg.textContent = pfO.avg === null ? '–' : `${fmt(pfO.avg)} (${pfO.count}/3)`;
+      outPf.textContent = fmt(pfNote);
+
+      const spK = avgOf(spKlausurInputs);
+      const spM = parseGrade(spMuendlich.value);
+      const spNote = weightedExamNote(spK.avg, spM);
+
+      outSpAvg.textContent = spK.avg === null ? '–' : `${fmt(spK.avg)} (${spK.count}/2)`;
+      outSp.textContent = fmt(spNote);
+
+      let total = null;
+      if (pfNote !== null && spNote !== null) {
+        total = (W_EXAMS_PFLICHT * pfNote) + (W_EXAMS_SCHWERPUNKT * spNote);
+      }
+      outTotal.textContent = fmt(total);
+
+      const missing = [];
+      if (pfK.count < 6) missing.push('Klausuren (Pflichtfach)');
+      if (pfO.count < 3) missing.push('Mündlich (Pflichtfach)');
+      if (spK.count < 2) missing.push('Klausuren (Schwerpunkt)');
+      if (spM === null) missing.push('Mündlich (Schwerpunkt)');
+      
+      if (missing.length && total === null) {
+        outHint.textContent = `Hinweis: Für die Gesamtnote fehlen noch Werte.`;
+      }
+
+      const allNums = [
+        ...pfKlausurInputs.map(i => parseGrade(i.value)),
+        ...pfOralInputs.map(i => parseGrade(i.value)),
+        ...spKlausurInputs.map(i => parseGrade(i.value)),
+        spM, parseGrade(targetTotal.value), parseGrade(assumeSpOral.value)
+      ].filter(n => n !== null);
+      
+      if (allNums.some(n => n < 0 || n > 18)) {
+        outWarn.textContent = 'Achtung: Eingetragene Werte liegen außerhalb der Skala (0–18).';
+      }
+
+      const target = parseGrade(targetTotal.value);
+      if (target === null) {
+        outNeedSpNote.textContent = '–';
+        return;
+      }
+      if (pfNote === null) {
+        outNeedSpNote.textContent = '–';
+        outNeedSpWarn.textContent = 'Bitte fülle zuerst das Pflichtfach komplett aus.';
+        return;
+      }
+
+      const neededSp = (target - (W_EXAMS_PFLICHT * pfNote)) / W_EXAMS_SCHWERPUNKT;
+      outNeedSpNote.textContent = fmt(neededSp);
+
+      if (neededSp < 0 || neededSp > 18) {
+        outNeedSpWarn.textContent = 'Wunschnote ist mit der aktuellen Pflichtfachnote rechnerisch nicht erreichbar.';
+      }
+
+      const assumedOral = parseGrade(assumeSpOral.value);
+      if (assumedOral !== null) {
+        const neededKavg = (neededSp - (W_MUENDLICH * assumedOral)) / W_KLAUSUREN;
+        outNeedSpDetail.innerHTML = `Bei einer mündlichen Note von <strong>${fmt(assumedOral)}</strong> wird in den Schwerpunkt-Klausuren ein Schnitt von <strong>${fmt(neededKavg)}</strong> benötigt.`;
+        
+        if (neededKavg < 0 || neededKavg > 18) {
+          outNeedSpWarn.textContent = 'Der dafür benötigte Klausurenschnitt liegt außerhalb der Skala (0–18).';
+        }
+      }
+    }
+
+    btnReset.addEventListener('click', () => {
+      [...pfKlausurInputs, ...pfOralInputs, ...spKlausurInputs, spMuendlich, targetTotal, assumeSpOral]
+        .forEach(i => i.value = '');
+      recalc();
+    });
+
+    btnFillDemo.addEventListener('click', () => {
+      const demoPfK = [8.0, 9.0, 7.5, 8.5, 9.5, 8.0];
+      const demoPfO = [9.0, 10.0, 8.0];
+      const demoSpK = [10.0, 9.0];
+
+      pfKlausurInputs.forEach((inp, idx) => inp.value = demoPfK[idx]);
+      pfOralInputs.forEach((inp, idx) => inp.value = demoPfO[idx]);
+      spKlausurInputs.forEach((inp, idx) => inp.value = demoSpK[idx]);
+      
+      spMuendlich.value = 10.0;
+      targetTotal.value = 9.0;
+      assumeSpOral.value = 10.0;
+
+      recalc();
+    });
+
+    recalc();
+  </script>
+</body>
+</html>
