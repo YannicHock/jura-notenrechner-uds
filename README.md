@@ -1,6 +1,6 @@
 # Jura Notenrechner UdS
 
-Ein schlanker, clientseitiger Notenrechner für das Erste Juristische Staatsexamen an der **Universität des Saarlandes (UdS)**. Die Anwendung läuft vollständig im Browser – ohne Backend, ohne Abhängigkeiten.
+Ein schlanker, clientseitiger Notenrechner für das Erste Juristische Staatsexamen an der **Universität des Saarlandes (UdS)**, den ich für meine Freundin und ihre Komiliton*innen geschrieben habe, damit ich es ihr nicht immer händisch ausrechnen muss. Die Anwendung läuft vollständig im Browser – ohne Backend, ohne Abhängigkeiten.
 
 🔗 **Live:** [https://yannickhock.github.io/jura-notenrechner-uds/](https://yannickhock.github.io/jura-notenrechner-uds/)
 
