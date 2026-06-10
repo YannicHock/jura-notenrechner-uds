@@ -220,7 +220,7 @@
         </div>
 
         <p class="small-text" style="margin-top: auto;">
-          Gewichtung: Klausuren 12/17 (~71%), Mündlich 5/17 (~29%).
+          Gewichtung: je Klausur 40%, Mündlich 20%.
         </p>
       </div>
 
@@ -302,6 +302,9 @@
     const W_EXAMS_SCHWERPUNKT = 0.3;
     const W_KLAUSUREN = 12/17;
     const W_MUENDLICH = 5/17;
+
+    const W_SP_KLAUSUR = 0.4;
+    const W_SP_MUENDLICH = 0.2;
 
     const pfKlausurenWrap = document.getElementById('pf-klausuren');
     const pfOralWrap = document.getElementById('pf-muendlich-parts');
@@ -399,7 +402,12 @@
 
       const spK = avgOf(spKlausurInputs);
       const spM = parseGrade(spMuendlich.value);
-      const spNote = weightedExamNote(spK.avg, spM);
+      const spK1 = parseGrade(spKlausurInputs[0].value);
+      const spK2 = parseGrade(spKlausurInputs[1].value);
+      let spNote = null;
+      if (spK1 !== null && spK2 !== null && spM !== null) {
+        spNote = (W_SP_KLAUSUR * spK1) + (W_SP_KLAUSUR * spK2) + (W_SP_MUENDLICH * spM);
+      }
 
       outSpAvg.textContent = spK.avg === null ? '–' : `${fmt(spK.avg)} (${spK.count}/2)`;
       outSp.textContent = fmt(spNote);
@@ -451,7 +459,7 @@
 
       const assumedOral = parseGrade(assumeSpOral.value);
       if (assumedOral !== null) {
-        const neededKavg = (neededSp - (W_MUENDLICH * assumedOral)) / W_KLAUSUREN;
+        const neededKavg = (neededSp - (W_SP_MUENDLICH * assumedOral)) / (2 * W_SP_KLAUSUR);
         outNeedSpDetail.innerHTML = `Bei einer mündlichen Note von <strong>${fmt(assumedOral)}</strong> wird in den Schwerpunkt-Klausuren ein Schnitt von <strong>${fmt(neededKavg)}</strong> benötigt.`;
         
         if (neededKavg < 0 || neededKavg > 18) {

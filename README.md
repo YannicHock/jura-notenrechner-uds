@@ -10,7 +10,7 @@ Ein schlanker, clientseitiger Notenrechner für das Erste Juristische Staatsexam
 
 - **Gesamtnote berechnen** aus staatlicher Pflichtfachprüfung (70 %) und universitärer Schwerpunktprüfung (30 %)
 - **Pflichtfachprüfung:** 6 Klausuren + 3 mündliche Teilnoten (Klausuren 12/17 ≈ 71 %, Mündlich 5/17 ≈ 29 %)
-- **Schwerpunktprüfung:** 2 Klausuren + 1 mündliche Note (gleiche Gewichtung 12/17 / 5/17)
+- **Schwerpunktprüfung:** 2 Klausuren + 1 mündliche Note (je Klausur 40 %, Mündlich 20 %)
 - **Ziel-Rechner:** Berechnet, welche Schwerpunkt-Endnote (und ggf. welchen Klausurenschnitt) man bei einer angestrebten Gesamtnote benötigt
 - Echtzeit-Berechnung ohne Seitenneuladen
 - Validierung: Warnung bei Werten außerhalb der Skala (0–18)
@@ -20,7 +20,7 @@ Ein schlanker, clientseitiger Notenrechner für das Erste Juristische Staatsexam
 
 ```
 Pflichtfachnote  = (Ø Klausuren × 12/17) + (Ø Mündlich × 5/17)
-Schwerpunktnote  = (Ø Klausuren × 12/17) + (Mündliche Note × 5/17)
+Schwerpunktnote  = (Klausur 1 × 0,40) + (Klausur 2 × 0,40) + (Mündliche Note × 0,20)
 Gesamtnote       = Pflichtfachnote × 0,70 + Schwerpunktnote × 0,30
 ```
 
